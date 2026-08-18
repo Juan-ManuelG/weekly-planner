@@ -29,7 +29,30 @@ activityForm.addEventListener("submit", function (event) {
         color: color
     };
 
-    actividades.push(nuevaActividad);
+
+    let conflicto=false;
+    actividades.forEach(function(actividadExistente){
+        if(actividadExistente.dia===nuevaActividad.dia){
+            const nuevoInicio=parseInt(nuevaActividad.horaInicio);
+            const nuevoFin=parseInt(nuevaActividad.horaFin);
+        
+            const inicioExistente=parseInt(actividadExistente.horaInicio);
+            const finExistente=parseInt(actividadExistente.horaFin);
+
+            if(nuevoInicio<finExistente && nuevoFin>inicioExistente){
+                conflicto=true
+            }
+        }
+
+
+    });
+
+    if(!conflicto){
+        actividades.push(nuevaActividad);
+    }else{
+        alert("No se puede agregar la actividad porque existe un conflicto de horario.");
+    }
+    
 
     const actividadJSON = JSON.stringify(actividades);
 
@@ -55,15 +78,15 @@ const filas = document.querySelectorAll("tbody tr");
 
 actividades.forEach(function (actividad) {
     filas.forEach(function (fila) {
-        const hora = fila.querySelector("th").textContent
-
-        if (hora == actividad.horaInicio) {
+        const hora = parseInt(fila.querySelector("th").textContent);
+        const inicio=parseInt(actividad.horaInicio);
+        const fin=parseInt(actividad.horaFin);
+        if (hora >= inicio && hora <= fin) {
             const celdas = fila.querySelectorAll("td");
             const indiceDia = dias.indexOf(actividad.dia);
             const celda = celdas[indiceDia];
-            celda.textContent = actividad.actividad;
-            celda.style.background=actividad.color;
-
+                celda.textContent = actividad.actividad;
+                celda.style.background=actividad.color;
         }
     });
 });
