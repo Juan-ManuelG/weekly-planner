@@ -1,0 +1,24 @@
+{
+  "name": "weekly-planner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "terser frontend/js/app.js --compress --mangle --output frontend/js/app.min.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Juan-ManuelG/weekly-planner.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Juan-ManuelG/weekly-planner/issues"
+  },
+  "homepage": "https://github.com/Juan-ManuelG/weekly-planner#readme",
+  "devDependencies": {
+    "terser": "^5.50.0"
+  }
+}
