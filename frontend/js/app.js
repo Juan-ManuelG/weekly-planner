@@ -1,5 +1,8 @@
 const activityForm = document.getElementById("activity-form");
+const activitySubmit = document.getElementById("activity-submit");/*btn modal*/
+const addActivity = document.getElementById("new-activity-btn");
 
+let actividadEditandoId = null;
 const actividadesGuardadas = localStorage.getItem("actividades")
 const actividades = actividadesGuardadas
     ? JSON.parse(actividadesGuardadas)
@@ -10,37 +13,106 @@ actividades.forEach(function (actividad) {
 });
 
 
-const filas = document.querySelectorAll("tbody tr");
+const tbody = document.querySelector("tbody");
+const calendarioOriginal = tbody.innerHTML;
+
+/*para limpiar/reconstruir*/
+function restaurarCalendario() {
+    tbody.innerHTML = calendarioOriginal;
+}
+
 
 function mostrarActividades() {
+
+    restaurarCalendario();
+
+    const filas = document.querySelectorAll("tbody tr");
+
     actividades.forEach(function (actividad) {
+
         filas.forEach(function (fila) {
-            const hora = parseInt(fila.querySelector("th").textContent);
+
+            const hora = parseInt(
+                fila.querySelector("th").textContent
+            );
+
             const inicio = parseInt(actividad.horaInicio);
             const fin = parseInt(actividad.horaFin);
             const duracion = fin - inicio;
+
             if (hora > inicio && hora < fin) {
-                const celda = fila.querySelector(`[data-day="${actividad.dia}"]`);
+
+                const celda = fila.querySelector(
+                    `[data-day="${actividad.dia}"]`
+                );
 
                 if (celda) {
                     celda.remove();
                 }
             }
+
             if (hora === inicio) {
-                const celda = fila.querySelector(`[data-day="${actividad.dia}"]`);
+
+                const celda = fila.querySelector(
+                    `[data-day="${actividad.dia}"]`
+                );
 
                 if (celda) {
+
                     celda.textContent = actividad.actividad;
                     celda.style.textAlign = "center";
                     celda.style.verticalAlign = "middle";
                     celda.rowSpan = duracion;
                     celda.style.background = actividad.color;
+                    celda.dataset.id = actividad.id;
+
+                    celda.addEventListener("click", function () {
+
+                        const id = celda.dataset.id;
+
+                        actividadEditandoId = id;
+
+                        const actividadSeleccionada =
+                            actividades.find(function (actividad) {
+                                return actividad.id === id;
+                            });
+
+                        console.log(actividadSeleccionada);
+
+                        document.getElementById("activity-name").value =
+                            actividadSeleccionada.actividad;
+
+                        document.getElementById("activity-day").value =
+                            actividadSeleccionada.dia;
+
+                        document.getElementById("start-time").value =
+                            actividadSeleccionada.horaInicio;
+
+                        document.getElementById("end-time").value =
+                            actividadSeleccionada.horaFin;
+
+                        document.getElementById("activity-color").value =
+                            actividadSeleccionada.color;
+
+                        activitySubmit.textContent =
+                            "Guardar cambios";
+
+                        const modal =
+                            document.getElementById("exampleModal");
+
+                        const modalBootstrap =
+                            bootstrap.Modal.getOrCreateInstance(modal);
+
+                        modalBootstrap.show();
+                    });
                 }
             }
-
         });
     });
 }
+
+
+mostrarActividades();
 
 /*Alertas */
 function mostrarAlerta(mensaje) {
@@ -61,6 +133,16 @@ botonLimpiar.addEventListener("click", function () {
 });
 
 
+addActivity.addEventListener("click", function () {
+
+    actividadEditandoId = null;
+
+    activityForm.reset();
+
+    activitySubmit.textContent = "Confirmar actividad";
+
+});
+
 
 activityForm.addEventListener("submit", function (event) {
 
@@ -73,6 +155,7 @@ activityForm.addEventListener("submit", function (event) {
     const color = activityForm.querySelector("#activity-color").value
 
     const nuevaActividad = {
+        id: crypto.randomUUID(),
         actividad: actividad,
         dia: dia,
         horaInicio: horaInicio,
@@ -86,6 +169,9 @@ activityForm.addEventListener("submit", function (event) {
     let conflicto = false;
     /*recorro el array actividades para validar horarios y evitar solapamientos*/
     actividades.forEach(function (actividadExistente) {
+        if (actividadEditandoId && actividadExistente.id === actividadEditandoId) {
+            return;
+        }
         if (actividadExistente.dia === nuevaActividad.dia) {
             const inicioExistente = parseInt(actividadExistente.horaInicio);
             const finExistente = parseInt(actividadExistente.horaFin);
@@ -109,18 +195,38 @@ activityForm.addEventListener("submit", function (event) {
             "No se puede agregar la actividad porque existe un conflicto de horario."
         );
     } else {
-        actividades.push(nuevaActividad);
-        mostrarActividades();
+        if (actividadEditandoId) {
+            const indice = actividades.findIndex(function (actividad) {
+                return actividad.id === actividadEditandoId
+            });
+
+            actividades[indice] = {
+                id: actividadEditandoId,
+                actividad: actividad,
+                dia: dia,
+                horaInicio: horaInicio,
+                horaFin: horaFin,
+                color: color
+            };
+
+        } else {
+            actividades.push(nuevaActividad);
+        }
 
         const actividadJSON = JSON.stringify(actividades);
         localStorage.setItem("actividades", actividadJSON);
 
         activityForm.reset();
 
+        actividadEditandoId = null;
+
+        activitySubmit.textContent = "Confirmar actividad";
+
         const modal = document.getElementById("exampleModal");
         const modalBootstrap = bootstrap.Modal.getOrCreateInstance(modal);
 
         modalBootstrap.hide();
+        mostrarActividades()
     }
 
 
@@ -136,4 +242,12 @@ botonCerrar.addEventListener("click", function () {
 
 botonOk.addEventListener("click", function () {
     alerta.classList.remove("show");
+});
+// Detectar cambios de localStorage hechos desde OTRA pestaña
+window.addEventListener("storage", function (event) {
+
+    if (event.key === "actividades") {
+        location.reload();
+    }
+
 });
