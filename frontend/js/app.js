@@ -66,6 +66,37 @@ function mostrarActividades() {
                     celda.style.background = actividad.color;
                     celda.dataset.id = actividad.id;
 
+                    /* Botón eliminar */
+                    const botonEliminar = document.createElement("button");
+
+                    botonEliminar.textContent = "×";
+                    botonEliminar.classList.add("btn-eliminar");
+                    botonEliminar.title="Eliminar";
+                    botonEliminar.addEventListener("click", function (event) {
+
+                        event.stopPropagation();
+
+                        const id = celda.dataset.id;
+
+                        const indice = actividades.findIndex(
+                            function (actividad) {
+                                return actividad.id === id;
+                            }
+                        );
+
+                        actividades.splice(indice, 1);
+
+                        localStorage.setItem(
+                            "actividades",
+                            JSON.stringify(actividades)
+                        );
+
+                        mostrarActividades();
+                    });
+
+                    celda.appendChild(botonEliminar);
+
+                    /* Click para editar */
                     celda.addEventListener("click", function () {
 
                         const id = celda.dataset.id;
